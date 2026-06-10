@@ -1,0 +1,27 @@
+name: Auto-Refresh EPG Data
+
+on:
+  schedule:
+    # updates automatically every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # a manual button which updates things instantly
+
+jobs:
+  update-guide:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Fetch Latest Data From Your Local Source
+        run: |
+          # replaces the url with local host url
+          curl -s "http://localhost:8409/iptv/xmltv.xml" -o schedule.xml
+
+      - name: makes the changes to the link
+        run: |
+          git config --global user.name "EPG Bot"
+          git config --global user.email "epg-bot@github.com"
+          git add schedule.xml
+          git commit -m "Automated schedule update: $(date)" || exit 0
+          git push
